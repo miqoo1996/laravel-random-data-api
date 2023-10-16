@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+    php:
+        image: php:8.1.1-apache
+        container_name: php
+        build:
+            context: Docker/php # folder path to docker file
+            dockerfile: Dockerfile
+        ports:
+            - "80:80"
+        volumes:
+            - .:/var/www/project
+        depends_on:
+            - mysql
+        networks:
+            - web_net
+
+    mysql:
+        image: mariadb:10.4.0
+        container_name: mysql
+        restart: always
+        build:
+            context: Docker/mysql
+            dockerfile: Dockerfile
+        ports:
+            - "3306:3306"
+        environment:
+            - MYSQL_ROOT_PASSWORD=${DB_USERNAME}
+            - MYSQL_DATABASE=${DB_DATABASE}
+        volumes:
+            # you should keep this for keeping database after restarting docker
+            - ./Docker/mysql/databases:/var/lib/mysql
+        networks:
+            - web_net
+
+    composer:
+        restart: 'no'
+        image: library/composer:latest
+        command: install
+        volumes:
+            - .:/app
+
+networks:
+    web_net:
+        driver: bridge
